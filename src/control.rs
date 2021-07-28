@@ -1,6 +1,6 @@
 use bitflags::bitflags;
 use std::convert::{TryFrom, TryInto};
-use std::{fmt, mem, str};
+use std::{ffi, fmt, mem, str};
 
 use crate::v4l_sys::*;
 
@@ -151,13 +151,13 @@ pub struct Description {
     /// Name of the control, intended for the user
     pub name: String,
     /// Minimum value, inclusive
-    pub minimum: i32,
+    pub minimum: i64,
     /// Maximum value, inclusive
-    pub maximum: i32,
+    pub maximum: i64,
     /// Step size, always positive
-    pub step: i32,
+    pub step: u64,
     /// Default value
-    pub default: i32,
+    pub default: i64,
     /// Control flags
     pub flags: Flags,
 
@@ -165,14 +165,14 @@ pub struct Description {
     pub items: Option<Vec<(u32, MenuItem)>>,
 }
 
-impl From<v4l2_queryctrl> for Description {
-    fn from(ctrl: v4l2_queryctrl) -> Self {
+impl From<v4l2_query_ext_ctrl> for Description {
+    fn from(ctrl: v4l2_query_ext_ctrl) -> Self {
         Description {
             id: ctrl.id,
             typ: Type::try_from(ctrl.type_).unwrap(),
-            name: str::from_utf8(&ctrl.name)
+            name: unsafe { ffi::CStr::from_ptr(ctrl.name.as_ptr()) }
+                .to_str()
                 .unwrap()
-                .trim_matches(char::from(0))
                 .to_string(),
             minimum: ctrl.minimum,
             maximum: ctrl.maximum,

@@ -139,3 +139,4 @@ pub const VIDIOC_ENUM_FRAMEINTERVALS: _IOC_TYPE = _IOWR!(b'V', 75, v4l2_frmivale
 pub const VIDIOC_G_ENC_INDEX: _IOC_TYPE = _IOR!(b'V', 76, v4l2_enc_idx);
 pub const VIDIOC_ENCODER_CMD: _IOC_TYPE = _IOWR!(b'V', 77, v4l2_encoder_cmd);
 pub const VIDIOC_TRY_ENCODER_CMD: _IOC_TYPE = _IOWR!(b'V', 78, v4l2_encoder_cmd);
+pub const VIDIOC_QUERY_EXT_CTRL: _IOC_TYPE = _IOWR!(b'V', 103, v4l2_query_ext_ctrl);

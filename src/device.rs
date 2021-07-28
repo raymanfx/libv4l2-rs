@@ -93,14 +93,14 @@ impl Device {
     pub fn query_controls(&self) -> io::Result<Vec<control::Description>> {
         let mut controls = Vec::new();
         unsafe {
-            let mut v4l2_ctrl: v4l2_queryctrl = mem::zeroed();
+            let mut v4l2_ctrl: v4l2_query_ext_ctrl = mem::zeroed();
 
             loop {
                 v4l2_ctrl.id |= V4L2_CTRL_FLAG_NEXT_CTRL;
                 v4l2_ctrl.id |= V4L2_CTRL_FLAG_NEXT_COMPOUND;
                 match v4l2::ioctl(
                     self.handle().fd(),
-                    v4l2::vidioc::VIDIOC_QUERYCTRL,
+                    v4l2::vidioc::VIDIOC_QUERY_EXT_CTRL,
                     &mut v4l2_ctrl as *mut _ as *mut std::os::raw::c_void,
                 ) {
                     Ok(_) => {
@@ -171,11 +171,11 @@ impl Device {
     /// * `id` - Control identifier
     pub fn control(&self, id: u32) -> io::Result<Control> {
         unsafe {
-            let mut queryctrl: v4l2_queryctrl = mem::zeroed();
+            let mut queryctrl: v4l2_query_ext_ctrl = mem::zeroed();
             queryctrl.id = id;
             v4l2::ioctl(
                 self.handle().fd(),
-                v4l2::vidioc::VIDIOC_QUERYCTRL,
+                v4l2::vidioc::VIDIOC_QUERY_EXT_CTRL,
                 &mut queryctrl as *mut _ as *mut std::os::raw::c_void,
             )?;
 
@@ -183,19 +183,24 @@ impl Device {
             let description = control::Description::from(queryctrl);
 
             // query the actual control value
-            let mut v4l2_ctrl: v4l2_control = mem::zeroed();
+            let mut v4l2_ctrls: v4l2_ext_controls = mem::zeroed();
+            let mut v4l2_ctrl: v4l2_ext_control = mem::zeroed();
             v4l2_ctrl.id = id;
+            v4l2_ctrls.count = 1;
+            v4l2_ctrls.controls = &mut v4l2_ctrl as *mut v4l2_ext_control;
             v4l2::ioctl(
                 self.handle().fd(),
-                v4l2::vidioc::VIDIOC_G_CTRL,
+                v4l2::vidioc::VIDIOC_G_EXT_CTRLS,
                 &mut v4l2_ctrl as *mut _ as *mut std::os::raw::c_void,
             )?;
 
             let value = match description.typ {
                 control::Type::Integer | control::Type::Integer64 => {
-                    control::Value::Integer(v4l2_ctrl.value as i64)
+                    control::Value::Integer(v4l2_ctrl.__bindgen_anon_1.value64)
                 }
-                control::Type::Boolean => control::Value::Boolean(v4l2_ctrl.value == 1),
+                control::Type::Boolean => {
+                    control::Value::Boolean(v4l2_ctrl.__bindgen_anon_1.value64 == 1)
+                }
                 _ => {
                     return Err(io::Error::new(
                         io::ErrorKind::Other,
