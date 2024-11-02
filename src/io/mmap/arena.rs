@@ -16,7 +16,7 @@ pub struct Arena<'a> {
     pub buf_type: buffer::Type,
 }
 
-impl<'a> Arena<'a> {
+impl Arena<'_> {
     /// Returns a new buffer manager instance
     ///
     /// You usually do not need to use this directly.
@@ -118,7 +118,7 @@ impl<'a> Arena<'a> {
     }
 }
 
-impl<'a> Drop for Arena<'a> {
+impl Drop for Arena<'_> {
     fn drop(&mut self) {
         if self.bufs.is_empty() {
             // nothing to do

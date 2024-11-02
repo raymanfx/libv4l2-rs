@@ -26,6 +26,7 @@ pub enum Type {
     MetaOutput          = 14,
 
     /// Deprecated, do not use
+    #[deprecated]
     Private             = 0x80,
 }
 

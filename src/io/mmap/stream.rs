@@ -24,7 +24,7 @@ pub struct Stream<'a> {
     active: bool,
 }
 
-impl<'a> Stream<'a> {
+impl Stream<'_> {
     /// Returns a stream for frame capturing
     ///
     /// # Arguments
@@ -89,7 +89,7 @@ impl<'a> Stream<'a> {
     }
 }
 
-impl<'a> Drop for Stream<'a> {
+impl Drop for Stream<'_> {
     fn drop(&mut self) {
         if let Err(e) = self.stop() {
             if let Some(code) = e.raw_os_error() {
@@ -107,7 +107,7 @@ impl<'a> Drop for Stream<'a> {
     }
 }
 
-impl<'a> StreamTrait for Stream<'a> {
+impl StreamTrait for Stream<'_> {
     type Item = [u8];
 
     fn start(&mut self) -> io::Result<()> {
@@ -139,7 +139,7 @@ impl<'a> StreamTrait for Stream<'a> {
     }
 }
 
-impl<'a, 'b> CaptureStream<'b> for Stream<'a> {
+impl<'b> CaptureStream<'b> for Stream<'_> {
     fn queue(&mut self, index: usize) -> io::Result<()> {
         let mut v4l2_buf = v4l2_buffer {
             index: index as u32,
@@ -209,7 +209,7 @@ impl<'a, 'b> CaptureStream<'b> for Stream<'a> {
     }
 }
 
-impl<'a, 'b> OutputStream<'b> for Stream<'a> {
+impl<'b> OutputStream<'b> for Stream<'_> {
     fn queue(&mut self, index: usize) -> io::Result<()> {
         let mut v4l2_buf = v4l2_buffer {
             index: index as u32,

@@ -156,9 +156,8 @@ impl Device {
                     Err(e) => {
                         if controls.is_empty() || e.kind() != io::ErrorKind::InvalidInput {
                             return Err(e);
-                        } else {
-                            break;
                         }
+                        break;
                     }
                 }
             }
@@ -250,9 +249,8 @@ impl Device {
                                 io::ErrorKind::InvalidInput,
                                 "All controls must be in the same class",
                             ));
-                        } else {
-                            Some(c)
                         }
+                        Some(c)
                     }
                     None => Some(control.id & 0xFFFF0000),
                 };

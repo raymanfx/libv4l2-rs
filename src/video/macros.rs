@@ -27,9 +27,8 @@ macro_rules! impl_enum_frameintervals {
                 if ret.is_err() {
                     if v4l2_struct.index == 0 {
                         return Err(ret.err().unwrap());
-                    } else {
-                        return Ok(frameintervals);
                     }
+                    return Ok(frameintervals);
                 }
 
                 if let Ok(frame_interval) = FrameInterval::try_from(v4l2_struct) {
@@ -64,9 +63,8 @@ macro_rules! impl_enum_framesizes {
                 if ret.is_err() {
                     if v4l2_struct.index == 0 {
                         return Err(ret.err().unwrap());
-                    } else {
-                        return Ok(framesizes);
                     }
+                    return Ok(framesizes);
                 }
 
                 if let Ok(frame_size) = FrameSize::try_from(v4l2_struct) {

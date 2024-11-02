@@ -6,13 +6,13 @@ authors = ["Christopher N. Hesse <raymanfx@gmail.com>"]
 edition = "2018"
 license = "MIT"
 readme = "README.md"
-repository= "https://github.com/raymanfx/libv4l-rs"
+repository = "https://github.com/raymanfx/libv4l-rs"
 
 [dependencies]
 bitflags = "2"
 libc = "0.2"
 v4l-sys = { path = "v4l-sys", version = "0.3.0", optional = true }
-v4l2-sys = { path = "v4l2-sys", version = "0.3.0", package="v4l2-sys-mit", optional = true }
+v4l2-sys = { path = "v4l2-sys", version = "0.3.0", package = "v4l2-sys-mit", optional = true }
 
 [dev-dependencies]
 glium = "0.34"
@@ -25,7 +25,4 @@ libv4l = ["v4l-sys"]
 v4l2 = ["v4l2-sys"]
 
 [workspace]
-members = [
-    "v4l-sys",
-    "v4l2-sys",
-]
+members = ["v4l-sys", "v4l2-sys"]
