@@ -18,8 +18,8 @@ impl Output for Device {
     impl_enum_frameintervals!();
     impl_enum_framesizes!();
     impl_enum_formats!(Type::VideoOutput);
-    impl_format!(Type::VideoOutput);
-    impl_set_format!(Type::VideoOutput);
+    impl_format!(Type::VideoOutput, pix, Format);
+    impl_set_format!(Type::VideoOutput, pix, Format, Output);
 
     fn params(&self) -> io::Result<Parameters> {
         unsafe {

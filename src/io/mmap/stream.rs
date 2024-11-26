@@ -81,11 +81,22 @@ impl<'a> Stream<'a> {
     }
 
     fn buffer_desc(&self) -> v4l2_buffer {
-        v4l2_buffer {
+        let mut planes = v4l2_plane {
+            .. unsafe { mem::zeroed() }
+        };
+
+        let mut desc = v4l2_buffer {
             type_: self.buf_type as u32,
             memory: Memory::Mmap as u32,
             ..unsafe { mem::zeroed() }
+        };
+
+        if self.buf_type as u32 == Type::VideoCaptureMplane as u32 {
+            desc.length = 1;
+            desc.m.planes = &mut planes;
         }
+
+        return desc
     }
 }
 
@@ -255,8 +266,14 @@ impl<'a, 'b> OutputStream<'b> for Stream<'a> {
         }
         self.arena_index = v4l2_buf.index as usize;
 
+        let bytesused = if self.buf_type as u32 == Type::VideoCaptureMplane as u32 {
+            unsafe { (*v4l2_buf.m.planes).bytesused }
+        } else {
+            v4l2_buf.bytesused
+        };
+
         self.buf_meta[self.arena_index] = Metadata {
-            bytesused: v4l2_buf.bytesused,
+            bytesused,
             flags: v4l2_buf.flags.into(),
             field: v4l2_buf.field,
             timestamp: v4l2_buf.timestamp.into(),

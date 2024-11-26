@@ -26,15 +26,23 @@ impl fmt::Display for Quantization {
     }
 }
 
-impl TryFrom<u32> for Quantization {
-    type Error = ();
+macro_rules! imp_try_from {
+    ($($t:ty),*) => {
+        $(
+            impl TryFrom<$t> for Quantization {
+                type Error = ();
 
-    fn try_from(code: u32) -> Result<Self, Self::Error> {
-        match code {
-            0 => Ok(Self::Default),
-            1 => Ok(Self::FullRange),
-            2 => Ok(Self::LimitedRange),
-            _ => Err(()),
-        }
-    }
+                fn try_from(code: $t) -> Result<Self, Self::Error> {
+                    match code {
+                        0 => Ok(Self::Default),
+                        1 => Ok(Self::FullRange),
+                        2 => Ok(Self::LimitedRange),
+                        _ => Err(()),
+                    }
+                }
+            }
+        )*
+    };
 }
+
+imp_try_from!(u32, u8);

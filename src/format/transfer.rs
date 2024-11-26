@@ -39,20 +39,29 @@ impl fmt::Display for TransferFunction {
     }
 }
 
-impl TryFrom<u32> for TransferFunction {
-    type Error = ();
+macro_rules! impl_try_from_transfer_function {
+    ($($t:ty),*) => {
+        $(
+            impl TryFrom<$t> for TransferFunction {
+                type Error = ();
 
-    fn try_from(colorspace_code: u32) -> Result<Self, Self::Error> {
-        match colorspace_code {
-            0 => Ok(Self::Default),
-            1 => Ok(Self::Rec709),
-            2 => Ok(Self::SRGB),
-            3 => Ok(Self::OPRGB),
-            4 => Ok(Self::SMPTE240M),
-            5 => Ok(Self::None),
-            6 => Ok(Self::DCIP3),
-            7 => Ok(Self::SMPTE2084),
-            _ => Err(()),
-        }
-    }
+                fn try_from(colorspace_code: $t) -> Result<Self, Self::Error> {
+                    match colorspace_code {
+                        0 => Ok(Self::Default),
+                        1 => Ok(Self::Rec709),
+                        2 => Ok(Self::SRGB),
+                        3 => Ok(Self::OPRGB),
+                        4 => Ok(Self::SMPTE240M),
+                        5 => Ok(Self::None),
+                        6 => Ok(Self::DCIP3),
+                        7 => Ok(Self::SMPTE2084),
+                        _ => Err(()),
+                    }
+                }
+            }
+        )*
+    };
 }
+
+impl_try_from_transfer_function!(u8, u32);
+

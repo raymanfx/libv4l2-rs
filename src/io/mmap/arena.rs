@@ -1,6 +1,7 @@
 use std::{io, mem, ptr, slice, sync::Arc};
 
 use crate::buffer;
+use crate::buffer::Type;
 use crate::device::Handle;
 use crate::memory::Memory;
 use crate::v4l2;
@@ -35,11 +36,22 @@ impl<'a> Arena<'a> {
     }
 
     fn buffer_desc(&self) -> v4l2_buffer {
-        v4l2_buffer {
+        let mut planes = v4l2_plane {
+            .. unsafe { mem::zeroed() }
+        };
+
+        let mut desc = v4l2_buffer {
             type_: self.buf_type as u32,
             memory: Memory::Mmap as u32,
             ..unsafe { mem::zeroed() }
+        };
+
+        if self.buf_type as u32 == Type::VideoCaptureMplane as u32 {
+            desc.length = 1;
+            desc.m.planes = &mut planes;
         }
+
+        return desc
     }
 
     fn requestbuffers_desc(&self) -> v4l2_requestbuffers {
@@ -64,10 +76,9 @@ impl<'a> Arena<'a> {
         }
 
         for index in 0..v4l2_reqbufs.count {
-            let mut v4l2_buf = v4l2_buffer {
-                index,
-                ..self.buffer_desc()
-            };
+            let mut v4l2_buf = self.buffer_desc();
+
+            v4l2_buf.index = index;
             unsafe {
                 v4l2::ioctl(
                     self.handle.fd(),
@@ -75,18 +86,34 @@ impl<'a> Arena<'a> {
                     &mut v4l2_buf as *mut _ as *mut std::os::raw::c_void,
                 )?;
 
-                let ptr = v4l2::mmap(
-                    ptr::null_mut(),
-                    v4l2_buf.length as usize,
-                    libc::PROT_READ | libc::PROT_WRITE,
-                    libc::MAP_SHARED,
-                    self.handle.fd(),
-                    v4l2_buf.m.offset as libc::off_t,
-                )?;
+                if self.buf_type as u32 == Type::VideoCaptureMplane as u32 {
+                    let ptr = v4l2::mmap(
+                        ptr::null_mut(),
+                        (*v4l2_buf.m.planes).length as usize,
+                        libc::PROT_READ | libc::PROT_WRITE,
+                        libc::MAP_SHARED,
+                        self.handle.fd(),
+                        (*v4l2_buf.m.planes).m.mem_offset as libc::off_t,
+                    )?;
+                    let slice =
+                        slice::from_raw_parts_mut::<u8>(ptr as *mut u8, v4l2_buf.length as usize);
+                    self.bufs.push(slice);
+                } else {
+                    let ptr = v4l2::mmap(
+                        ptr::null_mut(),
+                        v4l2_buf.length as usize,
+                        libc::PROT_READ | libc::PROT_WRITE,
+                        libc::MAP_SHARED,
+                        self.handle.fd(),
+                        v4l2_buf.m.offset as libc::off_t,
+                    )?;
+                    let slice =
+                        slice::from_raw_parts_mut::<u8>(ptr as *mut u8, v4l2_buf.length as usize);
+                    self.bufs.push(slice);
+                }
 
-                let slice =
-                    slice::from_raw_parts_mut::<u8>(ptr as *mut u8, v4l2_buf.length as usize);
-                self.bufs.push(slice);
+
+
             }
         }
 
